@@ -1,0 +1,7 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+python-multipart
+opencv-python
+numpy
+# face_recognition dipasang oleh Zaky di modul /cv, bukan dibutuhkan backend langsung
