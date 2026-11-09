@@ -1,10 +1,12 @@
-"""Skema Pydantic untuk respons API. Semua respons memakai format yang sama:
-{"success": bool, "message": str, "data": ...}
+"""Skema Pydantic untuk request/respons API. Semua respons memakai format yang sama:
+{"success": bool, "message": str, "data": ..., "error_code": str | null}
 """
 from datetime import datetime
 from typing import Any, Optional
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, Field
+
+from models import Student, parse_encodings
 
 
 class ApiResponse(BaseModel):
@@ -15,10 +17,16 @@ class ApiResponse(BaseModel):
 
 
 class StudentOut(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
     id: int
     nama: str
     nim: str
+    jumlah_foto: int = 0
+
+
+class StudentUpdate(BaseModel):
+    """Body untuk PUT /students/{id}. Isi minimal salah satu."""
+    nama: Optional[str] = Field(None, max_length=100)
+    nim: Optional[str] = Field(None, pattern=r"^\d{5,20}$")
 
 
 class AttendanceOut(BaseModel):
@@ -28,6 +36,16 @@ class AttendanceOut(BaseModel):
     nim: str
     timestamp: datetime
     status: str
+
+
+def student_out(student: Student) -> StudentOut:
+    """Ubah baris Student menjadi StudentOut (tanpa mengirim data encoding)."""
+    return StudentOut(
+        id=student.id,
+        nama=student.nama,
+        nim=student.nim,
+        jumlah_foto=len(parse_encodings(student.encoding)),
+    )
 
 
 def ok(message: str, data: Any = None) -> dict:
