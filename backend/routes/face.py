@@ -1,17 +1,18 @@
 """POST /register dan POST /recognize."""
 import json
 import re
-from datetime import datetime, time, timedelta
 from typing import List
 
 from fastapi import APIRouter, Depends, File, Form, UploadFile
 from sqlalchemy.orm import Session
 
 import face_service
+from attendance_service import mark_today
 from database import get_db
 from errors import AppError
-from models import Attendance, Student
+from models import Admin, Student
 from schemas import ApiResponse, ok, student_out
+from security import require_admin
 from utils import read_image
 
 router = APIRouter(tags=["Wajah"])
@@ -54,8 +55,16 @@ async def register(
 
 
 @router.post("/recognize", response_model=ApiResponse)
-async def recognize(foto: UploadFile = File(...), db: Session = Depends(get_db)):
-    """Kenali wajah lalu catat kehadiran. Satu mahasiswa hanya tercatat sekali per hari."""
+async def recognize(
+    foto: UploadFile = File(...),
+    _admin: Admin = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """Kenali wajah lalu catat kehadiran (mode kiosk, HANYA admin).
+
+    Mahasiswa memakai POST /auth/face-login lalu POST /me/attendance. Endpoint ini dibatasi
+    admin supaya tidak ada yang bisa absen tanpa login. Satu mahasiswa hanya tercatat sekali per hari.
+    """
     image = await read_image(foto)
     encoding = face_service.get_encoding(image)
 
@@ -67,29 +76,15 @@ async def recognize(foto: UploadFile = File(...), db: Session = Depends(get_db))
     if student is None:
         raise AppError(404, "STUDENT_NOT_FOUND", "Data mahasiswa tidak ditemukan di database.")
 
-    # anti-duplikasi: cek apakah sudah ada catatan hari ini
-    start = datetime.combine(datetime.now().date(), time.min)
-    existing = (
-        db.query(Attendance)
-        .filter(
-            Attendance.student_id == student.id,
-            Attendance.timestamp >= start,
-            Attendance.timestamp < start + timedelta(days=1),
-        )
-        .first()
-    )
+    record, already = mark_today(db, student)
     result = {
         "nama": student.nama,
         "nim": student.nim,
         "distance": match["distance"],
+        "already_recorded": already,
+        "timestamp": record.timestamp,
+        "status": record.status,
     }
-    if existing:
-        result.update(already_recorded=True, timestamp=existing.timestamp, status=existing.status)
+    if already:
         return ok(f"{student.nama} sudah tercatat hari ini", result)
-
-    record = Attendance(student_id=student.id, status="hadir")
-    db.add(record)
-    db.commit()
-    db.refresh(record)
-    result.update(already_recorded=False, timestamp=record.timestamp, status=record.status)
     return ok(f"Kehadiran {student.nama} berhasil dicatat", result)
