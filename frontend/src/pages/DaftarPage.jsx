@@ -1,13 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import CameraView from "../components/CameraView.jsx";
+import BackendTodo from "../components/BackendTodo.jsx";
 import Alert from "../components/Alert.jsx";
 import { registerStudent } from "../api.js";
 
 const MAX_PHOTOS = 10; // sesuai batas backend
-const RECOMMENDED_PHOTOS = 3;
+const MIN_PHOTOS = 3; // depan, sedikit kiri, sedikit kanan
 
-export default function DaftarPage() {
+/** mode: "student" (publik, mahasiswa mendaftar sendiri) atau "admin" (admin menambah mahasiswa). */
+export default function DaftarPage({ mode = "student" }) {
   const cameraRef = useRef(null);
   const nextId = useRef(1);
 
@@ -59,7 +61,7 @@ export default function DaftarPage() {
     const errors = {};
     if (!nama.trim()) errors.nama = "Nama wajib diisi.";
     if (!/^\d{5,20}$/.test(nim.trim())) errors.nim = "NIM harus berupa angka, 5 sampai 20 digit.";
-    if (photos.length === 0) errors.photos = "Ambil minimal 1 foto wajah.";
+    if (photos.length < MIN_PHOTOS) errors.photos = `Ambil minimal ${MIN_PHOTOS} foto wajah (sekarang ${photos.length}).`;
     if (!consent) errors.consent = "Persetujuan pemilik wajah wajib dicentang.";
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
@@ -89,12 +91,25 @@ export default function DaftarPage() {
 
   return (
     <>
-      <h1>Daftar Wajah</h1>
+      <h1>{mode === "admin" ? "Tambah Mahasiswa" : "Registrasi Wajah"}</h1>
       <p className="lead">Isi data mahasiswa lalu ambil beberapa foto wajah dari sudut berbeda agar pengenalan lebih akurat.</p>
+      {mode === "student" && (
+        <BackendTodo>
+          Pendaftaran mandiri belum memverifikasi identitas: siapa pun bisa mendaftar dengan NIM orang lain. Putuskan bersama
+          tim: validasi NIM ke data akademik, atau status pendaftaran &quot;menunggu persetujuan admin&quot; (perlu field status
+          di tabel students dan endpoint approve).
+        </BackendTodo>
+      )}
 
       {success && (
         <Alert tone="success" title="Pendaftaran berhasil">
-          {success.nama} ({success.nim}) terdaftar dengan {success.jumlah_foto} foto. <Link to="/mahasiswa">Lihat daftar mahasiswa</Link>
+          {success.nama} ({success.nim}) terdaftar dengan {success.jumlah_foto} foto. {mode === "admin" ? (
+            <Link to="/admin/mahasiswa">Kembali ke daftar mahasiswa</Link>
+          ) : (
+            <Link to="/mahasiswa/masuk" className="btn btn-primary btn-sm">
+              Lanjut: masuk dengan wajah
+            </Link>
+          )}
         </Alert>
       )}
       {error && (
@@ -158,7 +173,7 @@ export default function DaftarPage() {
             </label>
           </div>
           <p className="muted">
-            Disarankan minimal {RECOMMENDED_PHOTOS} foto: menghadap depan, sedikit menoleh kiri, dan sedikit menoleh kanan, dengan cahaya cukup. Satu wajah per foto.
+            Minimal {MIN_PHOTOS} foto: menghadap depan, sedikit menoleh kiri, dan sedikit menoleh kanan, dengan cahaya cukup. Satu wajah per foto.
           </p>
           {fieldErrors.photos && <p className="field-error">{fieldErrors.photos}</p>}
 

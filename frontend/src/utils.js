@@ -76,6 +76,13 @@ const ERROR_INFO = {
   },
   INVALID_IMAGE: { tone: "danger", title: "Gambar tidak valid", hint: "Gunakan foto berformat JPEG atau PNG." },
   IMAGE_TOO_LARGE: { tone: "danger", title: "Ukuran gambar terlalu besar", hint: "Ukuran maksimal 5 MB per foto." },
+  NIM_ALREADY_REGISTERED: { tone: "warning", title: "NIM sudah terdaftar", hint: "Periksa kembali NIM, atau cari datanya di halaman Mahasiswa." },
+  TOO_MANY_PHOTOS: { tone: "warning", title: "Terlalu banyak foto", hint: "Maksimal 10 foto per pendaftaran." },
+  INVALID_INPUT: { tone: "warning", title: "Data belum benar", hint: "Periksa kembali isian formulir." },
+  NOT_IMPLEMENTED: { tone: "info", title: "Fitur belum tersedia", hint: "Bagian ini masih menunggu backend. Hubungi tim backend (Rizky)." },
+  UNAUTHORIZED: { tone: "warning", title: "Sesi berakhir", hint: "Silakan masuk kembali." },
+  INVALID_CREDENTIALS: { tone: "danger", title: "Username atau password salah", hint: "Periksa kembali lalu coba lagi." },
+  WRONG_PASSWORD: { tone: "danger", title: "Password lama salah", hint: "Masukkan password admin yang sedang dipakai." },
   STUDENT_NOT_FOUND: { tone: "danger", title: "Data mahasiswa tidak ditemukan", hint: "Muat ulang halaman lalu coba lagi." },
 };
 
@@ -88,4 +95,32 @@ export function describeError(error) {
     title: "Terjadi kesalahan",
     hint: error?.message || "Silakan coba lagi.",
   };
+}
+
+/**
+ * Unduh baris kehadiran (data dari GET /attendance) sebagai file CSV.
+ * - BOM (\ufeff) di awal agar Excel membaca UTF-8 dengan benar.
+ * - Tanda kutip digandakan agar nama yang mengandung koma/kutip tidak merusak kolom.
+ * - NIM diberi awalan ' supaya Excel tidak mengubahnya jadi notasi ilmiah (2.41E+12).
+ */
+export function downloadAttendanceCSV(rows, filename = "rekap_kehadiran.csv") {
+  const esc = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+  const header = ["No", "Nama", "NIM", "Tanggal", "Waktu", "Status"];
+  const lines = rows.map((r, i) =>
+    [i + 1, r.nama, `'${r.nim}`, String(r.timestamp).slice(0, 10), String(r.timestamp).slice(11, 19), r.status].map(esc).join(",")
+  );
+  const csv = "\ufeff" + [header.map(esc).join(","), ...lines].join("\r\n");
+  const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+/** Tambah (atau kurangi, jika negatif) hari pada tanggal "YYYY-MM-DD", hasilnya "YYYY-MM-DD" (waktu lokal). */
+export function addDays(iso, n) {
+  const [y, m, d] = iso.split("-").map(Number);
+  const date = new Date(y, m - 1, d + n);
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }

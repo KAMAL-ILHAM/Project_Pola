@@ -1,13 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import CameraView from "../components/CameraView.jsx";
 import ResultCard from "../components/ResultCard.jsx";
-import AttendanceTable from "../components/AttendanceTable.jsx";
-import { getAttendance, recognizeFace } from "../api.js";
-import { todayISO } from "../utils.js";
+import { recognizeFace } from "../api.js";
 
 const AUTO_INTERVAL_MS = 3000; // jeda antar pemindaian pada mode otomatis
 const COOLDOWN_MS = 5000; // setelah berhasil, jeda agar hasil sempat dibaca
 
+/**
+ * Absensi untuk mahasiswa. Wajah dikenali -> kehadiran tercatat.
+ * Wajah tidak dikenali -> ResultCard menampilkan "Tidak terdaftar" + tautan registrasi.
+ * Sengaja TIDAK menampilkan daftar presensi orang lain (privasi): itu hanya untuk admin.
+ */
 export default function PresensiPage() {
   const cameraRef = useRef(null);
   const busyRef = useRef(false); // mencegah dua permintaan berjalan bersamaan
@@ -16,23 +20,6 @@ export default function PresensiPage() {
   const [cameraStatus, setCameraStatus] = useState("loading");
   const [result, setResult] = useState({ status: "idle" });
   const [auto, setAuto] = useState(false);
-  const [recent, setRecent] = useState([]);
-  const [recentLoading, setRecentLoading] = useState(true);
-
-  const loadRecent = useCallback(async () => {
-    try {
-      const res = await getAttendance({ tanggal: todayISO() });
-      setRecent(res.data.slice(0, 5));
-    } catch {
-      setRecent([]); // daftar ini hanya pelengkap; kegagalannya tidak perlu mengganggu presensi
-    } finally {
-      setRecentLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadRecent();
-  }, [loadRecent]);
 
   const scan = useCallback(async () => {
     if (busyRef.current) return;
@@ -43,13 +30,12 @@ export default function PresensiPage() {
       const res = await recognizeFace(photo);
       setResult({ status: res.data.already_recorded ? "already" : "success", data: res.data });
       cooldownUntil.current = Date.now() + COOLDOWN_MS;
-      loadRecent();
     } catch (error) {
       setResult({ status: "error", error });
     } finally {
       busyRef.current = false;
     }
-  }, [loadRecent]);
+  }, []);
 
   // Mode otomatis: pindai berkala selama kamera siap
   useEffect(() => {
@@ -64,15 +50,15 @@ export default function PresensiPage() {
 
   return (
     <>
-      <h1>Presensi</h1>
-      <p className="lead">Hadapkan wajah ke kamera. Kehadiran akan dicatat otomatis jika wajah dikenali.</p>
+      <h1>Absensi</h1>
+      <p className="lead">Hadapkan wajah ke kamera. Kehadiran dicatat otomatis jika wajah Anda sudah terdaftar.</p>
 
       <div className="grid-2">
         <section className="card" aria-label="Kamera">
           <CameraView ref={cameraRef} onStatusChange={setCameraStatus} />
           <div className="controls">
             <button type="button" className="btn btn-primary btn-lg" onClick={scan} disabled={cameraStatus !== "ready" || scanning}>
-              {scanning ? "Memproses..." : "Presensi Sekarang"}
+              {scanning ? "Memproses..." : "Absen Sekarang"}
             </button>
             <label className="check">
               <input type="checkbox" checked={auto} onChange={(e) => setAuto(e.target.checked)} disabled={cameraStatus !== "ready"} />
@@ -81,11 +67,14 @@ export default function PresensiPage() {
           </div>
         </section>
 
-        <section aria-label="Hasil presensi">
+        <section aria-label="Hasil absensi">
           <ResultCard result={result} />
           <div className="card">
-            <h2>Presensi terbaru hari ini</h2>
-            <AttendanceTable rows={recent} loading={recentLoading} emptyText="Belum ada yang presensi hari ini." />
+            <h2>Belum terdaftar?</h2>
+            <p>Daftarkan wajah Anda lebih dulu, setelah itu Anda bisa langsung absen.</p>
+            <Link to="/daftar" className="btn btn-secondary">
+              Ke halaman registrasi
+            </Link>
           </div>
         </section>
       </div>
