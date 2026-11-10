@@ -1,19 +1,22 @@
+import Spinner from "./Spinner.jsx";
 import StatusBadge from "./StatusBadge.jsx";
-import { formatTime } from "../utils.js";
+import { formatDate, formatTime } from "../utils.js";
 
 /**
- * Tabel kehadiran.
- * rows: data dari GET /attendance. showDate=true menambah kolom tanggal.
+ * Tabel kehadiran. Props:
+ *  rows       : [{ id, nama, nim, timestamp, status }]
+ *  loading    : tampilkan spinner
+ *  showDate   : tampilkan kolom tanggal (untuk rekap lintas hari)
+ *  emptyText  : teks bila data kosong
+ *  onDelete   : (opsional, khusus admin) fungsi(row) -> menambah kolom Aksi dengan tombol Hapus
  */
-export default function AttendanceTable({ rows, loading = false, emptyText = "Belum ada data kehadiran.", showDate = false }) {
-  if (!loading && rows.length === 0) {
-    return <p className="empty">{emptyText}</p>;
-  }
+export default function AttendanceTable({ rows, loading, showDate = false, emptyText = "Belum ada data.", onDelete }) {
+  if (loading) return <Spinner label="Memuat data..." />;
+  if (rows.length === 0) return <p className="empty">{emptyText}</p>;
 
   return (
-    <div className="table-wrap" aria-busy={loading}>
+    <div className="table-wrap">
       <table className="table">
-        <caption className="sr-only">Daftar kehadiran mahasiswa</caption>
         <thead>
           <tr>
             <th scope="col">No</th>
@@ -22,6 +25,7 @@ export default function AttendanceTable({ rows, loading = false, emptyText = "Be
             {showDate && <th scope="col">Tanggal</th>}
             <th scope="col">Waktu</th>
             <th scope="col">Status</th>
+            {onDelete && <th scope="col">Aksi</th>}
           </tr>
         </thead>
         <tbody>
@@ -30,16 +34,22 @@ export default function AttendanceTable({ rows, loading = false, emptyText = "Be
               <td>{i + 1}</td>
               <td>{row.nama}</td>
               <td>{row.nim}</td>
-              {showDate && <td>{new Date(row.timestamp.replace(/\.\d+/, "")).toLocaleDateString("id-ID")}</td>}
+              {showDate && <td>{formatDate(row.timestamp)}</td>}
               <td>{formatTime(row.timestamp)}</td>
               <td>
                 <StatusBadge status={row.status} />
               </td>
+              {onDelete && (
+                <td>
+                  <button type="button" className="btn btn-danger btn-sm" onClick={() => onDelete(row)}>
+                    Hapus
+                  </button>
+                </td>
+              )}
             </tr>
           ))}
         </tbody>
       </table>
-      {loading && <p className="muted">Memuat data...</p>}
     </div>
   );
 }
