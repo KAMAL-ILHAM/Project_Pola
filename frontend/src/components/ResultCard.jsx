@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import Spinner from "./Spinner.jsx";
 import { describeError, formatDate, formatHourMinute, formatTime } from "../utils.js";
 
@@ -5,14 +6,15 @@ import { describeError, formatDate, formatHourMinute, formatTime } from "../util
  * Kartu hasil pengenalan wajah.
  * result: { status: "idle" | "loading" | "success" | "already" | "error", data?, error? }
  */
-export default function ResultCard({ result }) {
+/** idle: (opsional) { title, text } untuk mengganti teks awal, mis. pada halaman login wajah. */
+export default function ResultCard({ result, idle }) {
   const { status, data, error } = result;
 
   if (status === "idle") {
     return (
       <div className="result result-idle" aria-live="polite">
-        <h2>Siap presensi</h2>
-        <p>Posisikan wajah di dalam bingkai, lalu tekan tombol Presensi Sekarang.</p>
+        <h2>{idle?.title ?? "Siap presensi"}</h2>
+        <p>{idle?.text ?? "Posisikan wajah di dalam bingkai, lalu tekan tombol Presensi Sekarang."}</p>
       </div>
     );
   }
@@ -22,6 +24,22 @@ export default function ResultCard({ result }) {
       <div className="result result-loading" aria-live="polite" aria-busy="true">
         <h2>Mengenali wajah</h2>
         <Spinner label="Mohon tunggu sebentar..." />
+      </div>
+    );
+  }
+
+  // Wajah tidak cocok dengan data mana pun: tampilkan "Tidak terdaftar" + ajakan registrasi
+  if (status === "error" && error?.errorCode === "FACE_NOT_RECOGNIZED") {
+    return (
+      <div className="result result-danger" role="alert">
+        <h2>Tidak terdaftar</h2>
+        <p>
+          Wajah Anda belum terdaftar di sistem. Jika Anda sudah mendaftar, coba lagi dengan cahaya yang lebih terang dan
+          wajah menghadap lurus ke kamera.
+        </p>
+        <Link to="/mahasiswa/daftar" className="btn btn-primary">
+          Daftarkan wajah sekarang
+        </Link>
       </div>
     );
   }
