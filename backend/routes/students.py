@@ -6,8 +6,10 @@ from database import get_db
 from errors import AppError
 from models import Attendance, Student
 from schemas import ApiResponse, StudentUpdate, ok, student_out
+from security import require_admin, revoke_all_for
 
-router = APIRouter(tags=["Mahasiswa"])
+# seluruh endpoint di sini hanya untuk admin (berisi nama dan NIM semua mahasiswa)
+router = APIRouter(tags=["Mahasiswa"], dependencies=[Depends(require_admin)])
 
 
 def _get_or_404(db: Session, student_id: int) -> Student:
@@ -58,6 +60,7 @@ def delete_student(student_id: int, db: Session = Depends(get_db)):
     """
     student = _get_or_404(db, student_id)
     removed = db.query(Attendance).filter(Attendance.student_id == student.id).delete()
+    revoke_all_for(db, "student", student.id)  # sesi login mahasiswa ini ikut dicabut
     info = {"id": student.id, "nama": student.nama, "nim": student.nim, "catatan_kehadiran_dihapus": removed}
     db.delete(student)
     db.commit()
