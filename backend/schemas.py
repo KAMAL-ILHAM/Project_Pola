@@ -21,6 +21,7 @@ class StudentOut(BaseModel):
     nama: str
     nim: str
     jumlah_foto: int = 0
+    created_at: Optional[datetime] = None
 
 
 class StudentUpdate(BaseModel):
@@ -38,6 +39,23 @@ class AttendanceOut(BaseModel):
     status: str
 
 
+class LoginIn(BaseModel):
+    """Body untuk POST /auth/login (admin)."""
+    username: str = Field(..., min_length=1, max_length=50)
+    password: str = Field(..., min_length=1, max_length=200)
+
+
+class ChangePasswordIn(BaseModel):
+    """Body untuk POST /auth/change-password."""
+    password_lama: str = Field(..., min_length=1, max_length=200)
+    password_baru: str = Field(..., min_length=6, max_length=200, description="Minimal 6 karakter")
+
+
+class SettingsIn(BaseModel):
+    """Body untuk PUT /settings. Rentang threshold 0.30 - 0.80."""
+    threshold: float = Field(..., ge=0.30, le=0.80)
+
+
 def student_out(student: Student) -> StudentOut:
     """Ubah baris Student menjadi StudentOut (tanpa mengirim data encoding)."""
     return StudentOut(
@@ -45,6 +63,7 @@ def student_out(student: Student) -> StudentOut:
         nama=student.nama,
         nim=student.nim,
         jumlah_foto=len(parse_encodings(student.encoding)),
+        created_at=student.created_at,
     )
 
 
