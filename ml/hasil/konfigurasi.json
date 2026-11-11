@@ -1,0 +1,13 @@
+{
+  "seed": 42,
+  "test_ratio": 0.2,
+  "thresholds": [
+    0.4,
+    0.5,
+    0.6
+  ],
+  "metode": "jarak Euclidean, nearest neighbor (k=1), tolak jika jarak > threshold",
+  "jumlah_orang": 4,
+  "foto_latih": 8,
+  "foto_uji": 4
+}
