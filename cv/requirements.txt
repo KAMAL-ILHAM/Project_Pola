@@ -1,0 +1,9 @@
+# JANGAN pakai `pip install -r` untuk file ini di Windows: face_recognition menarik `dlib`
+# yang dibuild dari source dan gagal. Pasang manual dengan urutan di cv/README.md (Python 3.11).
+dlib-bin
+face_recognition_models
+Click
+numpy
+Pillow
+opencv-python
+# face_recognition dipasang terpisah dengan --no-deps (lihat README)
