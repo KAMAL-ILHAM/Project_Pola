@@ -43,7 +43,7 @@ export default function MahasiswaRiwayatPage() {
               <p className="empty">Belum ada riwayat kehadiran.</p>
             ) : (
               <div className="table-wrap">
-                <table className="table">
+                <table className="table table-stack">
                   <thead>
                     <tr>
                       <th scope="col">No</th>
@@ -55,10 +55,10 @@ export default function MahasiswaRiwayatPage() {
                   <tbody>
                     {rows.map((r, i) => (
                       <tr key={r.id}>
-                        <td>{i + 1}</td>
-                        <td>{formatDate(r.timestamp)}</td>
-                        <td>{formatTime(r.timestamp)}</td>
-                        <td>
+                        <td data-label="No">{i + 1}</td>
+                        <td data-label="Tanggal">{formatDate(r.timestamp)}</td>
+                        <td data-label="Waktu">{formatTime(r.timestamp)}</td>
+                        <td data-label="Status">
                           <StatusBadge status={r.status} />
                         </td>
                       </tr>

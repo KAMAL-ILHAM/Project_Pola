@@ -6,6 +6,7 @@ import Modal from "../../components/Modal.jsx";
 import Segmented from "../../components/Segmented.jsx";
 import { deleteAttendance, getAttendance } from "../../api.js";
 import { addDays, describeError, downloadAttendanceCSV, formatDate, todayISO, useDebounce } from "../../utils.js";
+import Icon from "../../components/Icon.jsx";
 
 const PRESETS = [
   { key: "today", label: "Hari ini" },
@@ -121,9 +122,11 @@ export default function AdminRekapPage() {
           <input type="search" placeholder="Cari nama..." value={nama} onChange={(e) => setNama(e.target.value)} />
         </label>
         <button type="button" className="btn btn-secondary" onClick={load} disabled={loading}>
+          <Icon name="refresh" />
           {loading ? "Memuat..." : "Muat ulang"}
         </button>
         <button type="button" className="btn btn-primary" onClick={exportCSV} disabled={rows.length === 0}>
+          <Icon name="download" />
           Ekspor CSV
         </button>
       </div>

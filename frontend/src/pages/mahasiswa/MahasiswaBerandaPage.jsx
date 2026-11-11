@@ -7,6 +7,7 @@ import StatusBadge from "../../components/StatusBadge.jsx";
 import { getMyAttendance, markMyAttendance } from "../../api.js";
 import { useAuth } from "../../auth.jsx";
 import { describeError, formatDate, formatHourMinute, formatTime, todayISO } from "../../utils.js";
+import Icon from "../../components/Icon.jsx";
 
 /** Beranda mahasiswa (setelah login wajah): status absen hari ini, tombol absen, dan 5 riwayat terakhir. */
 export default function MahasiswaBerandaPage() {
@@ -84,6 +85,7 @@ export default function MahasiswaBerandaPage() {
               <h2>Belum absen hari ini</h2>
               <p>Tekan tombol di bawah untuk mencatat kehadiran Anda.</p>
               <button type="button" className="btn btn-primary btn-lg" onClick={absen} disabled={marking}>
+                <Icon name="check" />
                 {marking ? "Mencatat..." : "Absen Sekarang"}
               </button>
             </div>
@@ -100,7 +102,7 @@ export default function MahasiswaBerandaPage() {
               <p className="empty">Belum ada riwayat kehadiran.</p>
             ) : (
               <div className="table-wrap">
-                <table className="table">
+                <table className="table table-stack">
                   <thead>
                     <tr>
                       <th scope="col">Tanggal</th>
@@ -111,9 +113,9 @@ export default function MahasiswaBerandaPage() {
                   <tbody>
                     {rows.slice(0, 5).map((r) => (
                       <tr key={r.id}>
-                        <td>{formatDate(r.timestamp)}</td>
-                        <td>{formatTime(r.timestamp)}</td>
-                        <td>
+                        <td data-label="Tanggal">{formatDate(r.timestamp)}</td>
+                        <td data-label="Waktu">{formatTime(r.timestamp)}</td>
+                        <td data-label="Status">
                           <StatusBadge status={r.status} />
                         </td>
                       </tr>

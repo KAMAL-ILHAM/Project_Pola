@@ -6,6 +6,7 @@ import Spinner from "../../components/Spinner.jsx";
 import { deleteStudent, getAttendance, getStudents, updateStudent } from "../../api.js";
 import BackendTodo from "../../components/BackendTodo.jsx";
 import { describeError, todayISO } from "../../utils.js";
+import Icon from "../../components/Icon.jsx";
 
 /** Admin: kelola data mahasiswa terdaftar (lihat, cari, tambah, ubah, hapus). */
 export default function AdminMahasiswaPage() {
@@ -52,6 +53,7 @@ export default function AdminMahasiswaPage() {
           <p className="lead">Kelola data mahasiswa yang wajahnya sudah terdaftar.</p>
         </div>
         <Link to="/admin/mahasiswa/tambah" className="btn btn-primary">
+          <Icon name="plus" />
           Tambah mahasiswa
         </Link>
       </div>
@@ -88,7 +90,7 @@ export default function AdminMahasiswaPage() {
           <p className="empty">{query ? "Tidak ada hasil untuk pencarian ini." : "Belum ada mahasiswa terdaftar."}</p>
         ) : (
           <div className="table-wrap">
-            <table className="table">
+            <table className="table table-stack">
               <caption className="sr-only">Daftar mahasiswa terdaftar</caption>
               <thead>
                 <tr>
@@ -102,17 +104,19 @@ export default function AdminMahasiswaPage() {
               <tbody>
                 {shown.map((s) => (
                   <tr key={s.id}>
-                    <td>{s.nama}</td>
-                    <td>{s.nim}</td>
-                    <td>{s.jumlah_foto}</td>
-                    <td>
+                    <td data-label="Nama">{s.nama}</td>
+                    <td data-label="NIM">{s.nim}</td>
+                    <td data-label="Jumlah foto">{s.jumlah_foto}</td>
+                    <td data-label="Hari ini">
                       {presentIds.has(s.nim) ? <span className="badge badge-success">Hadir</span> : <span className="badge badge-warning">Belum hadir</span>}
                     </td>
                     <td className="actions">
                       <button type="button" className="btn btn-secondary btn-sm" onClick={() => setEditing(s)} aria-label={`Ubah data ${s.nama}`}>
+                        <Icon name="edit" />
                         Ubah
                       </button>
                       <button type="button" className="btn btn-danger btn-sm" onClick={() => setDeleting(s)} aria-label={`Hapus ${s.nama}`}>
+                        <Icon name="trash" />
                         Hapus
                       </button>
                     </td>

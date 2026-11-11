@@ -6,9 +6,10 @@ import BackendTodo from "../../components/BackendTodo.jsx";
 import BarChart from "../../components/BarChart.jsx";
 import Segmented from "../../components/Segmented.jsx";
 import Spinner from "../../components/Spinner.jsx";
-import StatCard from "../../components/StatCard.jsx";
+import Gauge from "../../components/Gauge.jsx";
 import { getAttendance, getStudents, getSummary } from "../../api.js";
 import { addDays, describeError, formatDate, todayISO } from "../../utils.js";
+import Icon from "../../components/Icon.jsx";
 
 const REFRESH_MS = 30000; // hanya untuk tampilan "Hari ini"
 const DAY_OPTIONS = [
@@ -80,6 +81,7 @@ export default function AdminDashboardPage() {
           <p className="lead">Kehadiran pada {formatDate(tanggal)}.</p>
         </div>
         <Link to="/admin/rekap" className="btn btn-primary">
+          <Icon name="calendar-check" />
           Rekap &amp; ekspor CSV
         </Link>
       </div>
@@ -106,6 +108,7 @@ export default function AdminDashboardPage() {
           </select>
         </label>
         <button type="button" className="btn btn-secondary" onClick={load} disabled={loading}>
+          <Icon name="refresh" />
           {loading ? "Memuat..." : "Muat ulang"}
         </button>
       </div>
@@ -119,16 +122,28 @@ export default function AdminDashboardPage() {
       {!summary && loading && <Spinner label="Memuat ringkasan..." />}
       {summary && (
         <>
-          <div className="stats">
-            <StatCard label="Total mahasiswa" value={summary.total_mahasiswa} />
-            <StatCard label="Hadir" value={summary.hadir} tone="success" />
-            <StatCard label="Belum hadir" value={summary.belum_hadir} tone="warning" />
-            <StatCard label="Persentase hadir" value={`${summary.persentase_hadir}%`} tone="info" />
-          </div>
-
-          <section className="card">
-            <h2>Kehadiran {hari} hari terakhir</h2>
-            <BarChart data={summary.harian} total={summary.total_mahasiswa} highlight={summary.tanggal} />
+          <section className="panel-cream" aria-label="Ringkasan kehadiran">
+            <div className="panel-chart">
+              <h2 className="panel-title">Kehadiran {hari} hari terakhir</h2>
+              <BarChart data={summary.harian} total={summary.total_mahasiswa} highlight={summary.tanggal} />
+            </div>
+            <div className="panel-gauge">
+              <Gauge value={summary.persentase_hadir} label="Hadir" />
+            </div>
+            <dl className="panel-numbers">
+              <div className="big-stat">
+                <dt className="big-label">Mahasiswa hadir</dt>
+                <dd className="big-number">{summary.hadir}</dd>
+              </div>
+              <div className="big-stat">
+                <dt className="big-label">Belum hadir</dt>
+                <dd className="big-number">{summary.belum_hadir}</dd>
+              </div>
+              <div className="big-stat">
+                <dt className="big-label">Total terdaftar</dt>
+                <dd className="big-number">{summary.total_mahasiswa}</dd>
+              </div>
+            </dl>
           </section>
         </>
       )}
@@ -156,7 +171,7 @@ export default function AdminDashboardPage() {
           <p className="empty">Semua mahasiswa sudah hadir.</p>
         ) : (
           <div className="table-wrap">
-            <table className="table">
+            <table className="table table-stack">
               <thead>
                 <tr>
                   <th scope="col">No</th>
@@ -168,10 +183,10 @@ export default function AdminDashboardPage() {
               <tbody>
                 {belumRows.map((s, i) => (
                   <tr key={s.id}>
-                    <td>{i + 1}</td>
-                    <td>{s.nama}</td>
-                    <td>{s.nim}</td>
-                    <td>
+                    <td data-label="No">{i + 1}</td>
+                    <td data-label="Nama">{s.nama}</td>
+                    <td data-label="NIM">{s.nim}</td>
+                    <td data-label="Status">
                       <span className="badge badge-warning">Belum hadir</span>
                     </td>
                   </tr>

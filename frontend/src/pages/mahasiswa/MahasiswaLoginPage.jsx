@@ -5,6 +5,7 @@ import BackendTodo from "../../components/BackendTodo.jsx";
 import CameraView from "../../components/CameraView.jsx";
 import ResultCard from "../../components/ResultCard.jsx";
 import { useAuth } from "../../auth.jsx";
+import Icon from "../../components/Icon.jsx";
 
 const IDLE_TEXT = {
   title: "Siap verifikasi",
@@ -62,6 +63,7 @@ export default function MahasiswaLoginPage() {
           <CameraView ref={cameraRef} onStatusChange={setCameraStatus} />
           <div className="controls">
             <button type="button" className="btn btn-primary btn-lg" onClick={verify} disabled={cameraStatus !== "ready" || scanning}>
+              <Icon name="scan-face" />
               {scanning ? "Memverifikasi..." : "Masuk dengan Wajah"}
             </button>
           </div>
